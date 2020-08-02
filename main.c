@@ -79,6 +79,27 @@ void stat_isr() {
     handleSTAT();
 }
 
+void handleVblank() {
+    UBYTE input = joypad();
+    if(input & J_START) {
+        if(!inputLock) {
+            inputLock = 1;
+            if(!running) {
+                nextDeactivateSlot = 0;
+                running = 1;
+                for(UBYTE i = 0; i < 3; i++) slotRunning[i] = 1;
+                clss();
+            } else {
+                if(nextDeactivateSlot != 3) slotRunning[nextDeactivateSlot++] = 0;
+            }
+        }
+    } else inputLock = 0;
+}
+
+void vbl_isr() {
+    handleVblank();
+}
+
 void updateSingleSlot(UBYTE slot) {
     if(slotRunning[slot] || slotYpos[slot] != 8) {
 
@@ -128,6 +149,9 @@ void main() {
     add_LCD(stat_isr);
     *LYC_REG = SPRITE_SCANLINE_START;
     *STAT_REG = 0x45;
+
+    add_VBL(vbl_isr);
+    
     set_interrupts(LCD_IFLAG | VBL_IFLAG);
 
     // Start Game
@@ -136,23 +160,7 @@ void main() {
     SHOW_BKG;
     DISPLAY_ON;
 
-    while(1) {
-
-        UBYTE input = joypad();
-        if(input & J_START) {
-            if(!inputLock) {
-                inputLock = 1;
-                if(!running) {
-                    nextDeactivateSlot = 0;
-                    running = 1;
-                    for(UBYTE i = 0; i < 3; i++) slotRunning[i] = 1;
-                    clss();
-                } else {
-                    if(nextDeactivateSlot != 3) slotRunning[nextDeactivateSlot++] = 0;
-                }
-            }
-        } else inputLock = 0;
-        
+    while(1) {        
         if(nextDeactivateSlot == 3) {
             UBYTE allStopped = 1;
             for(UBYTE i = 0; i < 3; i++) {
