@@ -21,4 +21,4 @@ The ROM is a simple 32KB ROM with no MBC attached. This may change, as support f
 
 ## Screenshots
 
-![Game Screenshot](.\Screenshots\sc1.png)
+![Game Screenshot](Screenshots/sc1.png)
