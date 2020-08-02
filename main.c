@@ -12,6 +12,8 @@
 
 #define Y_SLOT 72
 
+#define WIN_ANIM_SCX_START 240
+
 #define SPRITE_SCANLINE_START 54
 #define SPRITE_SCANLINE_END 64
 
@@ -43,22 +45,28 @@ UBYTE inputLock = 0;
 UBYTE updateCooldown = 0;
 UBYTE inputCooldown = 0;
 
-UWORD credits = 10;
+UWORD credits = 50;
+
+UBYTE won = 0;
+UWORD winAmount = 0;
+UBYTE winx = WIN_ANIM_SCX_START;
+
+UBYTE initGfxLoad = 0;
 
 void updateSlotIcons() {
     for(UBYTE i = 0; i < 3; i++) set_sprite_tile(i, gameSlots[i].state);
 }
 
 void loadBackground() {
-    set_bkg_data(0, 34, slots);
+    set_bkg_data(0, 36, slots);
     set_bkg_tiles(5, 3, 32, 32, slotsmap);
 }
 
-void clss() {    
+void clss() {
     loadBackground();
     updateSlotIcons();
 
-    // Clear artifacts in tile row 1
+    // Add borders
     gotoxy(0,0);
     for(UBYTE i = 0; i < 20; i++) printf("\"");
 
@@ -132,7 +140,24 @@ void updateSlotRotation() {
 }
 
 void handleSlotStop() {
-    
+    if(gameSlots[0].state == gameSlots[1].state && gameSlots[1].state == gameSlots[2].state) {
+        won = 1;
+        winx = WIN_ANIM_SCX_START;
+        switch(gameSlots[0].state) {
+            case Diamond: winAmount = 100U; break;
+            case Seven: winAmount = 777U; break;
+            case Watermelon: winAmount = 50U; break;
+            case Bell: winAmount = 150U; break;
+            case Lemon: winAmount = 25U; break;
+            case Cherry: winAmount = 250U; break;
+        }
+        credits = (UBYTE)(credits + winAmount);
+        clss();
+    } else {
+        won = 0;
+        winx = WIN_ANIM_SCX_START;
+        clss();
+    }
 }
 
 void main() {
@@ -163,7 +188,7 @@ void main() {
 
     // Start Game
     clss();
-    clss(); // I don't know why but calling this twice makes it work
+    clss();
     enable_interrupts();
     SHOW_BKG;
     DISPLAY_ON;
@@ -178,6 +203,7 @@ void main() {
             if(allStopped) {
                 running = 0;
                 handleSlotStop();
+                nextDeactivateSlot = 0;
             }
         }
 
