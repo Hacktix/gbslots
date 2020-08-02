@@ -40,23 +40,21 @@ UBYTE nextDeactivateSlot = 0;
 
 UBYTE inputLock = 0;
 UBYTE updateCooldown = 0;
+UBYTE inputCooldown = 0;
 
 void updateSlotIcons() {
     for(UBYTE i = 0; i < 3; i++) set_sprite_tile(i, slotStates[i]);
 }
 
 void loadBackground() {
-    set_bkg_data(0, 15, slots);
+    set_bkg_data(0, 34, slots);
     set_bkg_tiles(5, 3, 10, 10, slotsmap);
 }
 
 void clss()  {
 	for(UBYTE i = 0; i < 17; ++i) {
 		gotoxy(0, i);
-        if(i == 2) printf("       SLOTS       ");
-        else if(!running && i == 14) printf("       PRESS       ");
-        else if(!running && i == 15) printf("       START       ");
-		else printf("                    ");
+        printf("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
 	}
     loadBackground();
     updateSlotIcons();
@@ -85,10 +83,10 @@ void handleVblank() {
         if(!inputLock) {
             inputLock = 1;
             if(!running) {
+                clss();
                 nextDeactivateSlot = 0;
                 running = 1;
                 for(UBYTE i = 0; i < 3; i++) slotRunning[i] = 1;
-                clss();
             } else {
                 if(nextDeactivateSlot != 3) slotRunning[nextDeactivateSlot++] = 0;
             }
@@ -124,9 +122,7 @@ void updateSlotRotation() {
 }
 
 void handleSlotStop() {
-    gotoxy(0, 15);
-    if(slotStates[0] == slotStates[1] && slotStates[1] == slotStates[2]) printf("        WIN        ");
-    else  printf("     TRY AGAIN     ");
+    
 }
 
 void main() {
@@ -151,7 +147,7 @@ void main() {
     *STAT_REG = 0x45;
 
     add_VBL(vbl_isr);
-    
+
     set_interrupts(LCD_IFLAG | VBL_IFLAG);
 
     // Start Game
