@@ -7,7 +7,7 @@
  Info:
    Section       : 
    Bank          : 0
-   Map size      : 10 x 10
+   Map size      : 32 x 32
    Tile set      : G:\Projects\Homebrew Game Dev\Gameboy\gbslots\Graphics\tiles.gbr
    Plane count   : 1 plane (8 bits)
    Plane order   : Tiles are continues
@@ -18,8 +18,8 @@
 
 */
 
-#define slotsmapWidth 10
-#define slotsmapHeight 10
+#define slotsmapWidth 32
+#define slotsmapHeight 32
 #define slotsmapBank 0
 
 extern unsigned char slotsmap[];

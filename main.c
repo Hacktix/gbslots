@@ -1,5 +1,6 @@
 #include <gb/gb.h>
 #include <gb/console.h>
+#include <gb/drawing.h>
 #include <stdio.h>
 
 #include "Graphics/slots.c"
@@ -48,16 +49,16 @@ void updateSlotIcons() {
 
 void loadBackground() {
     set_bkg_data(0, 34, slots);
-    set_bkg_tiles(5, 3, 10, 10, slotsmap);
+    set_bkg_tiles(5, 3, 32, 32, slotsmap);
 }
 
-void clss()  {
-	for(UBYTE i = 0; i < 17; ++i) {
-		gotoxy(0, i);
-        printf("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
-	}
+void clss() {    
     loadBackground();
     updateSlotIcons();
+
+    // Clear artifacts in tile row 1
+    gotoxy(0,0);
+    printf("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
 }
 
 void handleSTAT() {
@@ -83,7 +84,6 @@ void handleVblank() {
         if(!inputLock) {
             inputLock = 1;
             if(!running) {
-                clss();
                 nextDeactivateSlot = 0;
                 running = 1;
                 for(UBYTE i = 0; i < 3; i++) gameSlots[i].running = 1;
@@ -128,6 +128,7 @@ void handleSlotStop() {
 void main() {
 
     disable_interrupts();
+    DISPLAY_OFF;
 
     // Initialize Sprites
     set_sprite_data(0, 15, slots);
@@ -152,6 +153,7 @@ void main() {
 
     // Start Game
     clss();
+    clss(); // I don't know why but calling this twice makes it work
     enable_interrupts();
     SHOW_BKG;
     DISPLAY_ON;
