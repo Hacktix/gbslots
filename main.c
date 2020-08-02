@@ -1,13 +1,9 @@
 #include <gb/gb.h>
 #include <gb/console.h>
 #include <stdio.h>
-#include <rand.h>
 
 #include "Graphics/slots.c"
 #include "Graphics/slotsmap.c"
-
-#define TITLE_X 56
-#define TITLE_Y 40
 
 #define X_SLOT1 56
 #define X_SLOT2 80
@@ -18,7 +14,6 @@
 #define SPRITE_SCANLINE_START 54
 #define SPRITE_SCANLINE_END 64
 
-#define LCDC     (UBYTE*)0xFF40U
 #define STAT_REG (UBYTE*)0xFF41U
 #define LY_REG   (UBYTE*)0xFF44U
 #define LYC_REG  (UBYTE*)0xFF45U
@@ -32,9 +27,14 @@ enum SlotIcon {
     Cherry = 14
 };
 
-UBYTE slotStates[3];
-UBYTE slotRunning[3];
-UBYTE slotYpos[3];
+struct Slot {
+    UBYTE state;
+    UBYTE running;
+    UBYTE ypos;
+};
+
+struct Slot gameSlots[3];
+
 UBYTE running = 0;
 UBYTE nextDeactivateSlot = 0;
 
@@ -43,7 +43,7 @@ UBYTE updateCooldown = 0;
 UBYTE inputCooldown = 0;
 
 void updateSlotIcons() {
-    for(UBYTE i = 0; i < 3; i++) set_sprite_tile(i, slotStates[i]);
+    for(UBYTE i = 0; i < 3; i++) set_sprite_tile(i, gameSlots[i].state);
 }
 
 void loadBackground() {
@@ -86,9 +86,9 @@ void handleVblank() {
                 clss();
                 nextDeactivateSlot = 0;
                 running = 1;
-                for(UBYTE i = 0; i < 3; i++) slotRunning[i] = 1;
+                for(UBYTE i = 0; i < 3; i++) gameSlots[i].running = 1;
             } else {
-                if(nextDeactivateSlot != 3) slotRunning[nextDeactivateSlot++] = 0;
+                if(nextDeactivateSlot != 3) gameSlots[nextDeactivateSlot++].running = 0;
             }
         }
     } else inputLock = 0;
@@ -99,17 +99,17 @@ void vbl_isr() {
 }
 
 void updateSingleSlot(UBYTE slot) {
-    if(slotRunning[slot] || slotYpos[slot] != 8) {
+    if(gameSlots[slot].running || gameSlots[slot].ypos != 8) {
 
-        if(!slotRunning[slot] && slotYpos[slot] < 8 && slotYpos[slot] + (slot + 1) > 8) slotYpos[slot] = 8;
-        else slotYpos[slot] += (slot + 1);
+        if(!gameSlots[slot].running && gameSlots[slot].ypos < 8 && gameSlots[slot].ypos + (slot + 1) > 8) gameSlots[slot].ypos = 8;
+        else gameSlots[slot].ypos += (slot + 1);
 
-        if(slotYpos[slot] >= 20) {
-            slotYpos[slot] = 0;
-            slotStates[slot] = (slotStates[slot] - 8) % 6 + 9;
+        if(gameSlots[slot].ypos >= 20) {
+            gameSlots[slot].ypos = 0;
+            gameSlots[slot].state = (gameSlots[slot].state - 8) % 6 + 9;
             move_sprite(slot, slot == 0 ? X_SLOT1 : slot == 1 ? X_SLOT2 : X_SLOT3, Y_SLOT - 8);
         }
-        else move_sprite(slot, slot == 0 ? X_SLOT1 : slot == 1 ? X_SLOT2 : X_SLOT3, Y_SLOT - (8 - slotYpos[slot]));
+        else move_sprite(slot, slot == 0 ? X_SLOT1 : slot == 1 ? X_SLOT2 : X_SLOT3, Y_SLOT - (8 - gameSlots[slot].ypos));
     }
     
 }
@@ -133,9 +133,9 @@ void main() {
     set_sprite_data(0, 15, slots);
 
     for(UBYTE i = 0; i < 3; i++) {
-        slotStates[i] = Seven;
-        slotRunning[i] = 0;
-        slotYpos[i] = 8;
+        gameSlots[i].state = Seven;
+        gameSlots[i].running = 0;
+        gameSlots[i].ypos = 8;
         UBYTE x = i == 0 ? X_SLOT1 : i == 1 ? X_SLOT2 : X_SLOT3;
         move_sprite(i, x, Y_SLOT);
         set_sprite_prop(i, S_PRIORITY);
@@ -160,7 +160,7 @@ void main() {
         if(nextDeactivateSlot == 3) {
             UBYTE allStopped = 1;
             for(UBYTE i = 0; i < 3; i++) {
-                allStopped = slotYpos[i] == 8;
+                allStopped = gameSlots[i].ypos == 8;
                 if(!allStopped) break;
             }
             if(allStopped) {
