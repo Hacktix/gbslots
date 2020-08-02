@@ -12,12 +12,15 @@
 
 #define Y_SLOT 72
 
-#define WIN_ANIM_SCX_START 240
+#define WIN_ANIM_SCX_START 90
+#define WIN_ANIM_Y_START 103
+#define WIN_ANIM_Y_END 127
 
 #define SPRITE_SCANLINE_START 54
 #define SPRITE_SCANLINE_END 64
 
 #define STAT_REG (UBYTE*)0xFF41U
+#define SCX_REG  (UBYTE*)0xFF43U
 #define LY_REG   (UBYTE*)0xFF44U
 #define LYC_REG  (UBYTE*)0xFF45U
 
@@ -75,6 +78,10 @@ void clss() {
     printf("Credits:");
     gotoxy(13,10);
     printf("%d%c%c%c", credits, 0, 0, 0);
+
+    // Hide win label
+    gotoxy(0, 13);
+    printf("%c%c%c%c%c%c%c%c%c", 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void handleSTAT() {
@@ -85,6 +92,14 @@ void handleSTAT() {
             break;
         case SPRITE_SCANLINE_END:
             HIDE_SPRITES;
+            *LYC_REG = WIN_ANIM_Y_START;
+            break;
+        case WIN_ANIM_Y_START:
+            *SCX_REG = won ? winx : WIN_ANIM_SCX_START;
+            *LYC_REG = WIN_ANIM_Y_END;
+            break;
+        case WIN_ANIM_Y_END:
+            *SCX_REG = 0;
             *LYC_REG = SPRITE_SCANLINE_START;
             break;
     }
@@ -95,6 +110,11 @@ void stat_isr() {
 }
 
 void handleVblank() {
+    if(won) {
+        winx++;
+        if(winx == WIN_ANIM_SCX_START) won = 0;
+    }
+
     UBYTE input = joypad();
     if(input & J_START) {
         if(!inputLock) {
@@ -153,6 +173,9 @@ void handleSlotStop() {
         }
         credits += winAmount;
         clss();
+
+        gotoxy(0, 13);
+        printf("+%d%cCr.", winAmount, 0);
     } else {
         won = 0;
         winx = WIN_ANIM_SCX_START;
@@ -193,7 +216,7 @@ void main() {
     SHOW_BKG;
     DISPLAY_ON;
 
-    while(1) {        
+    while(1) {
         if(nextDeactivateSlot == 3) {
             UBYTE allStopped = 1;
             for(UBYTE i = 0; i < 3; i++) {
