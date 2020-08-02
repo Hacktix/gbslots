@@ -43,6 +43,8 @@ UBYTE inputLock = 0;
 UBYTE updateCooldown = 0;
 UBYTE inputCooldown = 0;
 
+UWORD credits = 10;
+
 void updateSlotIcons() {
     for(UBYTE i = 0; i < 3; i++) set_sprite_tile(i, gameSlots[i].state);
 }
@@ -58,7 +60,13 @@ void clss() {
 
     // Clear artifacts in tile row 1
     gotoxy(0,0);
-    printf("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+    for(UBYTE i = 0; i < 20; i++) printf("\"");
+
+    // Draw credits label
+    gotoxy(4,10);
+    printf("Credits:");
+    gotoxy(13,10);
+    printf("%d%c%c%c", credits, 0, 0, 0);
 }
 
 void handleSTAT() {
@@ -84,9 +92,11 @@ void handleVblank() {
         if(!inputLock) {
             inputLock = 1;
             if(!running) {
+                credits--;
                 nextDeactivateSlot = 0;
                 running = 1;
                 for(UBYTE i = 0; i < 3; i++) gameSlots[i].running = 1;
+                clss();
             } else {
                 if(nextDeactivateSlot != 3) gameSlots[nextDeactivateSlot++].running = 0;
             }
