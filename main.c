@@ -54,7 +54,8 @@ UBYTE won = 0;
 UWORD winAmount = 0;
 UBYTE winx = WIN_ANIM_SCX_START;
 
-UBYTE initGfxLoad = 0;
+UWORD bankruptCooldown = 0x100U;
+UBYTE bankrupt = 0;
 
 void updateSlotIcons() {
     for(UBYTE i = 0; i < 3; i++) set_sprite_tile(i, gameSlots[i].state);
@@ -113,6 +114,18 @@ void handleVblank() {
     if(won) {
         winx++;
         if(winx == WIN_ANIM_SCX_START) won = 0;
+    }
+
+    if(bankrupt) {
+        if(bankruptCooldown != 0) bankruptCooldown--;
+        else {
+            bankruptCooldown = 0xFFFFU;
+            bankrupt = 0;
+            won = 0;
+            credits = 50;
+            clss();
+        }
+        return;
     }
 
     UBYTE input = joypad();
@@ -179,6 +192,18 @@ void handleSlotStop() {
     } else {
         won = 0;
         winx = WIN_ANIM_SCX_START;
+
+        if(credits == 0) {
+            won = 1;
+            bankrupt = 1;
+
+            clss();
+
+            gotoxy(0, 13);
+            printf("BANKRUPT", winAmount, 0);
+            return;
+        }
+
         clss();
     }
 }
