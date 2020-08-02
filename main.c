@@ -144,14 +144,14 @@ void handleSlotStop() {
         won = 1;
         winx = WIN_ANIM_SCX_START;
         switch(gameSlots[0].state) {
-            case Diamond: winAmount = 100U; break;
-            case Seven: winAmount = 777U; break;
-            case Watermelon: winAmount = 50U; break;
-            case Bell: winAmount = 150U; break;
-            case Lemon: winAmount = 25U; break;
-            case Cherry: winAmount = 250U; break;
+            case Diamond: winAmount = 100; break;
+            case Seven: winAmount = 777; break;
+            case Watermelon: winAmount = 50; break;
+            case Bell: winAmount = 150; break;
+            case Lemon: winAmount = 25; break;
+            case Cherry: winAmount = 250; break;
         }
-        credits = (UBYTE)(credits + winAmount);
+        credits += winAmount;
         clss();
     } else {
         won = 0;
